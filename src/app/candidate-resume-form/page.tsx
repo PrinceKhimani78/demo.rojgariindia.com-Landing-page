@@ -276,9 +276,7 @@ const ResumePage = () => {
 
     loadIndiaData();
   }, []);
-  useEffect(() => {
-    setShowPopup(true);
-  }, []);
+
 
   const handleEmailNext = async () => {
     if (!form.email) return alert(UI_MESSAGES.ENTER_EMAIL);
@@ -615,19 +613,25 @@ const ResumePage = () => {
   const handleOtpVerify = async () => {
     const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
     setLoading(true);
+    let verifySuccess = false;
     try {
       const result = await verifyOtp(BACKEND_URL, form.email, otp);
       if (!result.success) {
         showSnackbar(UI_MESSAGES.INCORRECT_OTP, "error");
+        setLoading(false);
         return;
       }
 
       setIsVerified(true);
-      setTimeout(() => setShowPopup(false), 1500);
+      setShowPopup(false);
+      verifySuccess = true;
     } catch (err) {
       showSnackbar(UI_MESSAGES.SERVER_ERROR, "error");
-    } finally {
       setLoading(false);
+    }
+
+    if (verifySuccess) {
+      await submitFormToBackend();
     }
   };
 
@@ -651,44 +655,7 @@ const ResumePage = () => {
 
   // validateForm moved to utils; call validateFormUtil(payload) below in submit
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    console.log("FORM SUBMIT TRIGGERED");
-    e.preventDefault();
-    // mark that user has attempted to submit - show all validation errors
-    setFormSubmitted(true);
-
-    // CHECK PHOTO UPLOAD (Optional now)
-    // if (!photoFile) {
-    //   setErrors((prev) => ({ ...prev, photo: "Profile photo is required" }));
-    //   showSnackbar("Please upload a profile photo.", "error");
-    //   window.scrollTo({ top: 0, behavior: "smooth" });
-    //   return;
-    // }
-
-    // Validate first
-    const payload = {
-      ...form,
-      city: form.taluka, // UI uses 'taluka' field for city
-      phone: normalizeIndianPhone(form.phone),
-      workType,
-      experiences,
-      educationList,
-      skillsList,
-    };
-
-    const vf = validateFormUtil(payload);
-    if (!vf.isValid) {
-      console.log("[FORM VALIDATION ERRORS]", vf.errors);
-      setErrors(vf.errors);
-      // Find first error and show it
-      const firstError = Object.values(vf.errors)[0];
-      if (firstError) showSnackbar(`Please fix: ${firstError}`, "error");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-    // Clear any stale errors if form is valid
-    setErrors({});
-
+  const submitFormToBackend = async () => {
     // Transform to backend API format
     const apiPayload = {
       full_name: form.firstName,
@@ -906,6 +873,61 @@ const ResumePage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      console.log("FORM SUBMIT TRIGGERED");
+      e.preventDefault();
+    }
+    // mark that user has attempted to submit - show all validation errors
+    setFormSubmitted(true);
+
+    // Validate first
+    const payload = {
+      ...form,
+      city: form.taluka, // UI uses 'taluka' field for city
+      phone: normalizeIndianPhone(form.phone),
+      workType,
+      experiences,
+      educationList,
+      skillsList,
+    };
+
+    const vf = validateFormUtil(payload);
+    if (!vf.isValid) {
+      console.log("[FORM VALIDATION ERRORS]", vf.errors);
+      setErrors(vf.errors);
+      // Find first error and show it
+      const firstError = Object.values(vf.errors)[0];
+      if (firstError) showSnackbar(`Please fix: ${firstError}`, "error");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    // Clear any stale errors if form is valid
+    setErrors({});
+
+    if (!isVerified) {
+      // Start OTP process
+      setLoading(true);
+      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+      try {
+        const result = await sendOtp(BACKEND_URL, form.email);
+        if (result.success) {
+          setPopupStep("otp");
+          setShowPopup(true);
+        } else {
+          showSnackbar(result.message || UI_MESSAGES.SERVER_ERROR, "error");
+        }
+      } catch (err) {
+        showSnackbar(UI_MESSAGES.SERVER_ERROR, "error");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    await submitFormToBackend();
   };
 
   if (!isClient) return null;
