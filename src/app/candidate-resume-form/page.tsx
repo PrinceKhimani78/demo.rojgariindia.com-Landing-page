@@ -259,6 +259,8 @@ const ResumePage = () => {
 
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null); // Store the actual file
+  const [resumeFile, setResumeFile] = useState<File | null>(null); // Store the resume file
+  const [resumeFileName, setResumeFileName] = useState<string | null>(null); // Display name
 
   useEffect(() => {
     setIsClient(true);
@@ -833,6 +835,32 @@ const ResumePage = () => {
         // no photo selected to upload
       }
 
+      // Upload resume if file was selected
+      if (resumeFile) {
+        try {
+          const resumeFormData = new FormData();
+          resumeFormData.append("resume", resumeFile);
+
+          const resumeUploadRes = await fetch(
+            `${BACKEND_URL}/candidate-profile/${candidateId}/upload`,
+            {
+              method: "POST",
+              body: resumeFormData,
+            },
+          );
+
+          if (!resumeUploadRes.ok) {
+            const errorData = await resumeUploadRes.json().catch(() => ({}));
+            showSnackbar(
+              errorData.message || "Resume upload failed. Please upload it later from admin panel.",
+              "error",
+            );
+          }
+        } catch (resumeError) {
+          showSnackbar("Resume upload failed. Please try again later.", "error");
+        }
+      }
+
       // Clear error and show success
       setDuplicateError("");
       showSnackbar(
@@ -864,6 +892,8 @@ const ResumePage = () => {
       setSkillsList([{ name: "", years: "", level: "" }]);
       setPhotoPreview(null);
       setPhotoFile(null);
+      setResumeFile(null);
+      setResumeFileName(null);
       setErrors({});
       setIsVerified(false);
       setShowPopup(false);
@@ -1217,6 +1247,41 @@ const ResumePage = () => {
                 error={errors.languagesKnown}
               />
             </div>
+
+            {/* Resume Upload Field */}
+            <div className="mt-4">
+              <label
+                className={`flex items-center gap-3 w-full px-4 py-3 border-2 border-dashed rounded-xl cursor-pointer transition ${
+                  resumeFile
+                    ? "border-[#72B76A] bg-green-50"
+                    : "border-gray-300 bg-white/10 hover:border-[#72B76A]"
+                }`}
+              >
+                <span className="text-2xl">{resumeFile ? "📄" : "📎"}</span>
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-gray-700">
+                    {resumeFile ? resumeFileName : "Upload Resume (PDF / Image)"}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {resumeFile
+                      ? "Click to replace"
+                      : "Optional · PDF, JPG, PNG up to 5MB"}
+                  </span>
+                </div>
+                <input
+                  type="file"
+                  accept="application/pdf,image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setResumeFile(file);
+                    setResumeFileName(file.name);
+                  }}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
             {/* duplicateError is shown via global toast; do not render inline */}
           </>
 
