@@ -49,21 +49,8 @@ export default function ComingSoon() {
   const [formData, setFormData] = useState({ email: "", phone: "" });
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [progress] = useState(60);
 
-  const titleRef = useRef<HTMLHeadingElement | null>(null);
-  const [titleWidth, setTitleWidth] = useState(0);
 
-  useEffect(() => {
-    if (titleRef.current) {
-      const resizeObserver = new ResizeObserver(() => {
-        setTitleWidth(titleRef.current?.offsetWidth || 0);
-      });
-      resizeObserver.observe(titleRef.current);
-      setTitleWidth(titleRef.current.offsetWidth);
-      return () => resizeObserver.disconnect();
-    }
-  }, []);
 
   const triggerConfetti = () => {
     if (typeof window === "undefined") return;
@@ -151,37 +138,7 @@ export default function ComingSoon() {
           />
         </motion.div>
 
-        {/* Title */}
-        <motion.h1
-          ref={titleRef}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1 }}
-          className="fontAL text-2xl sm:text-2xl md:text-4xl font-extrabold mb-2 drop-shadow-lg flex items-center justify-center gap-2 sm:gap-3 leading-[1.2]"
-        >
-          <span className="bg-gradient-to-r from-[#F5811E] via-[#FFCC23]/70 to-[#F5811E] bg-[length:200%_100%] animate-[shimmer_6s_linear_infinite] text-transparent bg-clip-text">
-            Coming
-          </span>
-          <span className="bg-gradient-to-r from-[#F5811E] via-[#FFCC23]/70 to-[#F5811E] bg-[length:200%_100%] animate-[shimmer_6s_linear_infinite] text-transparent bg-clip-text">
-            Soon
-          </span>
-        </motion.h1>
 
-        {/* Progress Bar */}
-        <div
-          className="bg-gray-200 rounded-full overflow-hidden mb-5 sm:mb-10 h-1 sm:h-2 border border-[#F5811E]/50"
-          style={{
-            width: `${titleWidth}px`,
-            maxWidth: "90vw",
-            transition: "width 0.5s ease",
-          }}
-        >
-          <motion.div
-            className="h-full bg-gradient-to-r from-[#F5811E] via-[#FFD633] to-[#F5811E]"
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 5, ease: "easeInOut" }}
-          />
-        </div>
 
         {/* Subtitle */}
         <motion.p
