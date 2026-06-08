@@ -4,10 +4,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-
-  eslint: {
-    ignoreDuringBuilds: true, // ✅ THIS FIXES CI FAILURE
-  },
 };
 
 export default nextConfig;
