@@ -50,27 +50,11 @@ export default function ComingSoon() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
 
-
-
-  const triggerConfetti = () => {
-    if (typeof window === "undefined") return;
-    import("canvas-confetti").then((mod: any) => {
-      const confetti = mod.default;
-      confetti({
-        particleCount: 100,
-        spread: 80,
-        origin: { y: 0.7 },
-        colors: ["#FFD633", "#00C9FF", "#ffffff"],
-      });
-    });
-  };
-
   const handleSubmit = (e: any) => {
     e.preventDefault();
     if (!formData.email || !formData.phone) return;
     setIsSubscribed(true);
     setShowSuccess(true);
-    triggerConfetti();
     setTimeout(() => setShowSuccess(false), 2500);
     setFormData({ email: "", phone: "" });
   };
